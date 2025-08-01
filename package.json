@@ -1,0 +1,45 @@
+{
+  "name": "ts-csv-builder",
+  "version": "1.0.4",
+  "description": "Utility package for parsing CSV files.",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "author": {
+    "name": "Tamás Vajda",
+    "email": "vajdatomi98@gmail.com"
+  },
+  "keywords": [
+    "csv",
+    "parser",
+    "csv-parser",
+    "ts-csv-parser",
+    "csvparser"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WTomas/csvparser.git"
+  },
+  "license": "MIT",
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "lint": "tsc",
+    "publish": "changeset publish",
+    "test:unit": "node --unhandled-rejections=warn ./node_modules/jest/bin/jest.js --runInBand --testTimeout=15000 --unhandled-rejections=warn --config ./jest-unit.config.json"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.27.9",
+    "@types/jest": "^29.5.13",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.5",
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.3"
+  },
+  "files": [
+    "./dist"
+  ],
+  "dependencies": {
+    "fast-csv": "^5.0.2"
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+}
