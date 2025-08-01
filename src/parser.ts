@@ -18,6 +18,7 @@ export class Parser<T extends Record<string, any> = {}> {
       skipEmptyLines: true,
       skipRows: 0,
       trim: true,
+      caseInsensitiveColumnNames: false,
       ...options
     };
   }
@@ -38,6 +39,7 @@ export class Parser<T extends Record<string, any> = {}> {
         propertyName,
         options: {
           trim: this.options.trim,
+          caseInsensitiveColumnNames: this.options.caseInsensitiveColumnNames,
           ...options
         }
       }
@@ -105,7 +107,7 @@ export class Parser<T extends Record<string, any> = {}> {
     rowIndex: number,
     headerIndex: Map<string, number>
   ): FieldResult {
-    const match = this.findColumnMatch(column.csvNames, headerIndex);
+    const match = this.findColumnMatchForColumn(column, headerIndex);
 
     if (!match) {
       return this.handleMissingColumn(column, rowIndex);
@@ -121,14 +123,44 @@ export class Parser<T extends Record<string, any> = {}> {
     return this.transformAndValidate(trimmedValue, column, match.columnName, rowIndex);
   }
 
-  private findColumnMatch(csvNames: string[], headerIndex: Map<string, number>): ColumnMatch {
-    const match = csvNames
+  private findColumnMatchForColumn(column: ColumnDefinition, headerIndex: Map<string, number>): ColumnMatch {
+    // Try exact match first
+    const exactMatch = column.csvNames
       .map(name => ({ name, index: headerIndex.get(name) }))
       .find(({ index }) => index !== undefined);
 
-    return match && match.index !== undefined
-      ? { columnIndex: match.index, columnName: match.name }
-      : null;
+    if (exactMatch && exactMatch.index !== undefined) {
+      return { columnIndex: exactMatch.index, columnName: exactMatch.name };
+    }
+
+    // Check case-insensitive matching (column-level or parser-level option)
+    const shouldUseCaseInsensitive = column.options.caseInsensitiveColumnNames ?? this.options.caseInsensitiveColumnNames;
+    
+    if (shouldUseCaseInsensitive) {
+      const caseInsensitiveMatch = this.findCaseInsensitiveMatch(column.csvNames, headerIndex);
+      if (caseInsensitiveMatch) {
+        return caseInsensitiveMatch;
+      }
+    }
+
+    return null;
+  }
+
+
+  private findCaseInsensitiveMatch(csvNames: string[], headerIndex: Map<string, number>): ColumnMatch | null {
+    const headerEntries = Array.from(headerIndex.entries());
+    
+    for (const csvName of csvNames) {
+      const lowerCsvName = csvName.toLowerCase();
+      const match = headerEntries.find(([header]) => header.toLowerCase() === lowerCsvName);
+      
+      if (match) {
+        const [originalHeaderName, index] = match;
+        return { columnIndex: index, columnName: originalHeaderName };
+      }
+    }
+
+    return null;
   }
 
   private handleMissingColumn(column: ColumnDefinition, rowIndex: number): FieldResult {

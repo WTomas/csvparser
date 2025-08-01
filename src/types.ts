@@ -4,6 +4,7 @@ export interface ColumnOptions<T, Nullable extends boolean = false> {
   nullable?: Nullable;
   defaultValue?: T;
   trim?: boolean;
+  caseInsensitiveColumnNames?: boolean;
 }
 
 export interface ParseError {
@@ -28,6 +29,7 @@ export interface ParserOptions {
   skipEmptyLines?: boolean;
   skipRows?: number;
   trim?: boolean;
+  caseInsensitiveColumnNames?: boolean;
 }
 
 export interface ColumnDefinition<T = any> {

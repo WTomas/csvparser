@@ -218,4 +218,154 @@ describe("Parser", () => {
     expect(result.success.length).toBe(1);
     expect(result.success[0]).toEqual({ name: "John", age: 30 });
   });
+
+  describe("Case-insensitive column matching", () => {
+    it("should match columns case-sensitively by default", () => {
+      const parser = new Parser()
+        .col("Name", "name")
+        .col("Age", "age", { transform: (v) => parseInt(v) });
+
+      const csv = "name,AGE\nJohn,30"; // Different case headers
+      const result = parser.parse(csv);
+
+      // Should fail to match because case sensitivity is default
+      expect(result.success.length).toBe(0);
+      expect(result.errors.length).toBe(2);
+      expect(result.errors[0].type).toBe("missing");
+      expect(result.errors[0].message).toContain('Column "Name" not found');
+      expect(result.errors[1].type).toBe("missing");
+      expect(result.errors[1].message).toContain('Column "Age" not found');
+    });
+
+    it("should match columns case-insensitively when parser option is enabled", () => {
+      const parser = new Parser({ caseInsensitiveColumnNames: true })
+        .col("Name", "name")
+        .col("Age", "age", { transform: (v) => parseInt(v) });
+
+      const csv = "name,AGE\nJohn,30"; // Different case headers
+      const result = parser.parse(csv);
+
+      expect(result.success.length).toBe(1);
+      expect(result.success[0]).toEqual({ name: "John", age: 30 });
+      expect(result.errors.length).toBe(0);
+    });
+
+    it("should match columns with mixed case variations", () => {
+      const parser = new Parser({ caseInsensitiveColumnNames: true })
+        .col("First_Name", "firstName")
+        .col("Last_Name", "lastName")
+        .col("Email_Address", "email");
+
+      const csv = "FIRST_NAME,last_name,Email_Address\nJohn,Doe,john@example.com";
+      const result = parser.parse(csv);
+
+      expect(result.success.length).toBe(1);
+      expect(result.success[0]).toEqual({
+        firstName: "John",
+        lastName: "Doe",
+        email: "john@example.com"
+      });
+    });
+
+    it("should prioritize exact case matches over case-insensitive matches", () => {
+      const parser = new Parser({ caseInsensitiveColumnNames: true })
+        .col("Name", "name");
+
+      // CSV has both "Name" and "name" columns
+      const csv = "Name,name,Age\nJohn,Jane,30";
+      const result = parser.parse(csv);
+
+      // Should match the exact case "Name" column, not "name"
+      expect(result.success.length).toBe(1);
+      expect(result.success[0]).toEqual({ name: "John" });
+    });
+
+    it("should support column-level case-insensitive override", () => {
+      const parser = new Parser({ caseInsensitiveColumnNames: false })
+        .col("Name", "name") // Case-sensitive by default
+        .col("Age", "age", { 
+          transform: (v) => parseInt(v),
+          caseInsensitiveColumnNames: true // Override for this column
+        });
+
+      const csv = "Name,AGE\nJohn,30"; // "Name" matches exactly, "AGE" is different case
+      const result = parser.parse(csv);
+
+      // Name should succeed (exact match), Age should succeed (case-insensitive override)
+      // Actually both should succeed in this case
+      expect(result.success.length).toBe(1);
+      expect(result.success[0]).toEqual({ name: "John", age: 30 });
+      expect(result.errors.length).toBe(0);
+    });
+
+    it("should fail column-level case-sensitive when no exact match", () => {
+      const parser = new Parser({ caseInsensitiveColumnNames: false })
+        .col("name", "name") // Case-sensitive by default, looking for lowercase "name"
+        .col("Age", "age", { 
+          transform: (v) => parseInt(v),
+          caseInsensitiveColumnNames: true // Override for this column
+        });
+
+      const csv = "Name,AGE\nJohn,30"; // "Name" is different case, "AGE" is different case
+      const result = parser.parse(csv);
+
+      // Name should fail (case-sensitive mismatch), Age should succeed (case-insensitive)
+      expect(result.success.length).toBe(0); // Row fails because name is missing
+      expect(result.errors.length).toBe(1);
+      expect(result.errors[0].message).toContain('Column "name" not found');
+    });
+
+    it("should support column-level case-sensitive override", () => {
+      const parser = new Parser({ caseInsensitiveColumnNames: true })
+        .col("Name", "name", { caseInsensitiveColumnNames: false }) // Override to case-sensitive
+        .col("Age", "age", { transform: (v) => parseInt(v) }); // Use parser default (case-insensitive)
+
+      const csv = "name,AGE\nJohn,30"; // "name" is different case
+      const result = parser.parse(csv);
+
+      // Name should fail (overridden to case-sensitive), Age should succeed (case-insensitive)
+      expect(result.success.length).toBe(0); // Row fails because Name is missing
+      expect(result.errors.length).toBe(1);
+      expect(result.errors[0].message).toContain('Column "Name" not found');
+    });
+
+    it("should work with multiple column names (aliases) in case-insensitive mode", () => {
+      const parser = new Parser({ caseInsensitiveColumnNames: true })
+        .col(["Full Name", "Name", "full_name"], "name")
+        .col("Age", "age", { transform: (v) => parseInt(v) });
+
+      const csv = "FULL_NAME,age\nJohn Doe,30";
+      const result = parser.parse(csv);
+
+      expect(result.success.length).toBe(1);
+      expect(result.success[0]).toEqual({ name: "John Doe", age: 30 });
+    });
+
+    it("should handle case-insensitive matching with special characters", () => {
+      const parser = new Parser({ caseInsensitiveColumnNames: true })
+        .col("User-Name", "userName")
+        .col("E-Mail", "email");
+
+      const csv = "user-name,E-MAIL\nJohn,john@example.com";
+      const result = parser.parse(csv);
+
+      expect(result.success.length).toBe(1);
+      expect(result.success[0]).toEqual({
+        userName: "John",
+        email: "john@example.com"
+      });
+    });
+
+    it("should handle case-insensitive matching with unicode characters", () => {
+      const parser = new Parser({ caseInsensitiveColumnNames: true })
+        .col("Prénom", "firstName")
+        .col("Âge", "age", { transform: (v) => parseInt(v) });
+
+      const csv = "PRÉNOM,âge\nJean,25";
+      const result = parser.parse(csv);
+
+      expect(result.success.length).toBe(1);
+      expect(result.success[0]).toEqual({ firstName: "Jean", age: 25 });
+    });
+  });
 });
