@@ -1,6 +1,6 @@
 {
   "name": "ts-csv-parser",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Utility package for parsing CSV files.",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
