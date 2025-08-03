@@ -169,7 +169,7 @@ describe("Column Options", () => {
       expect(result.success).toHaveLength(2);
       expect(result.errors).toHaveLength(1);
       expect(result.errors[0].message).toBe("Invalid email format");
-      expect(result.errors[0].row).toBe(1); // Jane's row
+      expect(result.errors[0].row).toBe(3); // Jane's row
     });
 
     it("should validate age ranges", () => {

@@ -24,7 +24,7 @@ describe("Error Handling", () => {
       expect(result.errors).toHaveLength(1);
       expect(result.errors[0].type).toBe("transform");
       expect(result.errors[0].message).toBe("Cannot transform invalid data");
-      expect(result.errors[0].row).toBe(1); // Jane's row
+      expect(result.errors[0].row).toBe(3); // Jane's row
       expect(result.errors[0].property).toBe("data");
       expect(result.errors[0].value).toBe("invalid");
     });
@@ -44,7 +44,7 @@ describe("Error Handling", () => {
 
       expect(result.errors).toHaveLength(1);
       expect(result.errors[0].type).toBe("transform");
-      expect(result.errors[0].row).toBe(1); // Jane's row
+      expect(result.errors[0].row).toBe(3); // Jane's row
     });
 
     it("should handle number parsing errors", () => {
@@ -148,8 +148,8 @@ describe("Error Handling", () => {
       expect(result.success).toHaveLength(2); // John and Alice
       expect(result.errors).toHaveLength(2); // Jane and Bob
 
-      expect(result.errors[0].row).toBe(1); // Jane
-      expect(result.errors[1].row).toBe(2); // Bob
+      expect(result.errors[0].row).toBe(3); // Jane
+      expect(result.errors[1].row).toBe(4); // Bob
     });
 
     it("should validate phone numbers", () => {
@@ -327,7 +327,7 @@ describe("Error Handling", () => {
       expect(result.errors).toHaveLength(1);
 
       const error = result.errors[0];
-      expect(error.row).toBe(1); // 0-indexed
+      expect(error.row).toBe(3); // CSV row (accounting for header)
       expect(error.type).toBe("validation");
       if (error.type !== "row-validation") {
         expect(error.column).toBe("Age");
@@ -353,12 +353,12 @@ describe("Error Handling", () => {
       expect(result.success).toHaveLength(1); // Only John
       expect(result.errors).toHaveLength(4);
 
-      // Row 1 errors (empty name, negative score)
-      expect(result.errors.filter((e) => e.row === 1)).toHaveLength(2);
-      // Row 2 errors (negative score)
-      expect(result.errors.filter((e) => e.row === 2)).toHaveLength(1);
-      // Row 3 errors (empty name)
-      expect(result.errors.filter((e) => e.row === 3)).toHaveLength(1);
+      // Row 2 errors (empty name, negative score) - CSV row 2
+      expect(result.errors.filter((e) => e.row === 3)).toHaveLength(2);
+      // Row 3 errors (negative score) - CSV row 3
+      expect(result.errors.filter((e) => e.row === 4)).toHaveLength(1);
+      // Row 4 errors (empty name) - CSV row 4
+      expect(result.errors.filter((e) => e.row === 5)).toHaveLength(1);
     });
 
     it("should distinguish between different error types", () => {

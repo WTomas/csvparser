@@ -26,7 +26,7 @@ describe("Row Validation", () => {
       expect(result.errors[0].message).toBe(
         "Total mismatch: expected 45, got 40"
       );
-      expect(result.errors[0].row).toBe(1);
+      expect(result.errors[0].row).toBe(3);
       expect(result.errors[0]["column"]).toBeUndefined();
     });
 
@@ -68,7 +68,7 @@ describe("Row Validation", () => {
       expect(result.errors).toHaveLength(1);
       expect(result.errors[0].type).toBe("row-validation");
       expect(result.errors[0].message).toBe("Age cannot exceed 100");
-      expect(result.errors[0].row).toBe(1);
+      expect(result.errors[0].row).toBe(3);
     });
   });
 
@@ -99,13 +99,13 @@ describe("Row Validation", () => {
       expect(result.errors).toHaveLength(3); // Second row has 2 errors, third row has 1
 
       // Second row errors
-      const row1Errors = result.errors.filter((e) => e.row === 1);
+      const row1Errors = result.errors.filter((e) => e.row === 3);
       expect(row1Errors).toHaveLength(2);
       expect(row1Errors[0].message).toBe("Price must be positive");
       expect(row1Errors[1].message).toBe("Total should be -45");
 
       // Third row error
-      const row2Errors = result.errors.filter((e) => e.row === 2);
+      const row2Errors = result.errors.filter((e) => e.row === 4);
       expect(row2Errors).toHaveLength(1);
       expect(row2Errors[0].message).toBe("Total should be 220");
     });
@@ -369,7 +369,7 @@ describe("Row Validation", () => {
       const error = result.errors[0];
 
       expect(error.type).toBe("row-validation");
-      expect(error.row).toBe(0);
+      expect(error.row).toBe(2);
       expect(error["column"]).toBeUndefined();
       expect(error.property).toBe("_row");
       expect(error.value).toBe(JSON.stringify({ value: 42 }));
@@ -390,10 +390,10 @@ describe("Row Validation", () => {
       expect(result.errors).toHaveLength(2);
 
       expect(result.errors[0].message).toBe("A is too large");
-      expect(result.errors[0].row).toBe(0);
+      expect(result.errors[0].row).toBe(2);
 
       expect(result.errors[1].message).toBe("B is too small");
-      expect(result.errors[1].row).toBe(0);
+      expect(result.errors[1].row).toBe(2);
     });
 
     it("should handle mixed column and row validation errors", () => {
@@ -420,12 +420,12 @@ describe("Row Validation", () => {
       expect(result.errors).toHaveLength(3);
 
       // First row has column validation errors only (no row validation runs)
-      const row0Errors = result.errors.filter((e) => e.row === 0);
+      const row0Errors = result.errors.filter((e) => e.row === 2);
       expect(row0Errors).toHaveLength(2);
       expect(row0Errors.every((e) => e.type === "validation")).toBe(true);
 
       // Second row has row validation error
-      const row1Errors = result.errors.filter((e) => e.row === 1);
+      const row1Errors = result.errors.filter((e) => e.row === 3);
       expect(row1Errors).toHaveLength(1);
       expect(row1Errors[0].type).toBe("row-validation");
       expect(row1Errors[0].message).toBe("Age seems unrealistic");
