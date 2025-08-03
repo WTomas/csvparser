@@ -1,4 +1,4 @@
-import { ColumnOptions, ColumnDefinition, ParseResult, ParseError, ParserOptions } from './types';
+import { ColumnOptions, ColumnDefinition, ParseResult, ParseError, ParserOptions, RowValidator } from './types';
 import { parseCSV } from './csv-tokenizer';
 
 // Pure function types
@@ -9,6 +9,7 @@ type RowResult = { record: any; errors: ParseError[] };
 export class Parser<T extends Record<string, any> = {}> {
   private readonly columns: ColumnDefinition[] = [];
   private readonly options: ParserOptions;
+  private readonly rowValidators: RowValidator<T>[] = [];
 
   constructor(options: ParserOptions = {}) {
     this.options = {
@@ -45,6 +46,17 @@ export class Parser<T extends Record<string, any> = {}> {
       }
     ];
     newParser.options = this.options;
+    newParser.rowValidators = this.rowValidators;
+    
+    return newParser;
+  }
+
+  public val(validator: RowValidator<T>): Parser<T> {
+    // Create new parser instance with updated validators (immutable)
+    const newParser = Object.create(Object.getPrototypeOf(this));
+    newParser.columns = this.columns;
+    newParser.options = this.options;
+    newParser.rowValidators = [...this.rowValidators, validator];
     
     return newParser;
   }
@@ -97,6 +109,28 @@ export class Parser<T extends Record<string, any> = {}> {
       }
       return acc;
     }, {});
+
+    // Apply row validators only if there are no column errors
+    if (errors.length === 0 && this.rowValidators.length > 0) {
+      const rowValidationErrors = this.rowValidators
+        .map(validator => {
+          const error = validator(record as T);
+          if (error) {
+            return {
+              row: rowIndex,
+              column: undefined,
+              property: '_row',
+              value: JSON.stringify(record),
+              message: error,
+              type: 'row-validation' as const
+            } as ParseError;
+          }
+          return null;
+        })
+        .filter((error): error is ParseError => error !== null);
+      
+      errors.push(...rowValidationErrors);
+    }
 
     return { record, errors };
   }
