@@ -1,7 +1,7 @@
 export { Parser } from "./parser";
 export type {
   ColumnOptions,
-  CellError as ColumnError,
+  CellError,
   RowValidationError,
   ParseError,
   ParseResult,
