@@ -15,15 +15,15 @@ A modern, type-safe CSV parser for TypeScript with zero dependencies. Built from
 ## Installation
 
 ```bash
-npm install csv-parser-ts
+npm install ts-csv-parser
 # or
-yarn add csv-parser-ts
+yarn add ts-csv-parser
 ```
 
 ## Quick Start
 
 ```typescript
-import { Parser } from 'csv-parser-ts';
+import { Parser } from 'ts-csv-parser';
 
 const parser = new Parser()
   .col('Name', 'name')
@@ -285,7 +285,7 @@ const parser = new Parser()
 ## Complete Example
 
 ```typescript
-import { Parser } from 'csv-parser-ts';
+import { Parser } from 'ts-csv-parser';
 
 // Employee data parser with comprehensive validation
 const employeeParser = new Parser({ delimiter: ',' })
