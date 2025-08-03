@@ -7,14 +7,26 @@ export interface ColumnOptions<T, Nullable extends boolean = false> {
   caseInsensitiveColumnNames?: boolean;
 }
 
-export interface ParseError {
+export type RowValidator<T> = (row: T) => string | undefined;
+
+export interface CellError {
   row: number;
   column: string;
   property: string;
   value: string;
   message: string;
-  type: 'transform' | 'validation' | 'missing';
+  type: "transform" | "validation" | "missing";
 }
+
+export interface RowValidationError {
+  row: number;
+  property: string;
+  value: string;
+  message: string;
+  type: "row-validation";
+}
+
+export type ParseError = CellError | RowValidationError;
 
 export interface ParseResult<T> {
   success: T[];
