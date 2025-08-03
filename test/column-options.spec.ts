@@ -589,4 +589,28 @@ describe("Column Options", () => {
       expect(result.success[1].score).toBe(3); // "100".length
     });
   });
+
+  describe("Multiple column aliases", () => {
+    it("should map to the correct column alias in the error", () => {
+      const parser = new Parser().col(
+        ["First name", "Given name"],
+        "firstName",
+        {
+          validate: (v) => (v.length > 0 ? undefined : "Name cannot be empty"),
+        }
+      );
+
+      const csv = "Given name,Last name\n,";
+      const result = parser.parse(csv);
+      console.log(result);
+
+      expect(result.hasErrors).toBe(true);
+      expect(result.errors[0].type).toBe("validation");
+      expect(result.errors[0].row).toBe(2);
+      if (result.errors[0].type === "validation") {
+        expect(result.errors[0].property).toBe("firstName");
+        expect(result.errors[0].column).toBe("Given name"); // Maps to column from CSV
+      }
+    });
+  });
 });
