@@ -1,0 +1,5 @@
+Employee ID,First Name,Last Name,Department,Hire Date,Salary,Active,Manager ID,Skills
+E001,John,Doe,Engineering,2020-01-15,75000.00,true,M001,"JavaScript,TypeScript,React"
+E002,Jane,Smith,Marketing,2019-03-22,65000.00,true,M002,"SEO,Content Marketing,Analytics"
+E003,Bob,Wilson,Engineering,2021-06-10,80000.00,false,M001,"Python,Machine Learning,Data Science"
+E004,Alice,Brown,HR,2018-11-05,55000.00,true,,"Recruiting,Employee Relations"

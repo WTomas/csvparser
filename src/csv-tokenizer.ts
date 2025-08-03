@@ -23,13 +23,6 @@ interface ParseConfig {
   readonly skipEmptyLines: boolean;
 }
 
-// Character processing result
-interface CharResult {
-  readonly field: string;
-  readonly inQuotes: boolean;
-  readonly skipNext: boolean;
-}
-
 export function parseCSV(input: string, options: ParserOptions): ParsedCSV {
   const config: ParseConfig = {
     delimiter: options.delimiter || ',',
@@ -80,51 +73,55 @@ function processLine(
     return state;
   }
 
-  // Process all characters in the line
-  const chars = Array.from(line);
-  const { field, inQuotes, row } = chars.reduce<{
-    field: string;
-    inQuotes: boolean;
-    row: string[];
-    skipNext: boolean;
-  }>(
-    (acc, char, index) => {
-      if (acc.skipNext) {
-        return { ...acc, skipNext: false };
+  // Process the line character by character, handling multi-character delimiters
+  let position = 0;
+  let field = state.currentField;
+  let inQuotes = state.inQuotes;
+  const row = [...state.currentRow];
+
+  while (position < line.length) {
+    const char = line[position];
+    
+    if (inQuotes) {
+      // In quoted field
+      if (char === config.quote) {
+        // Check for escaped quote
+        if (position + 1 < line.length && line[position + 1] === config.quote && config.escape === config.quote) {
+          field += config.quote;
+          position += 2; // Skip both quotes
+        } else {
+          // End of quoted field
+          inQuotes = false;
+          position++;
+        }
+      } else if (char === config.escape && config.escape !== config.quote && 
+                 position + 1 < line.length && line[position + 1] === config.quote) {
+        // Handle escape sequence
+        field += config.quote;
+        position += 2; // Skip escape and quote
+      } else {
+        field += char;
+        position++;
       }
-
-      const charResult = processCharacter(
-        char,
-        acc.field,
-        acc.inQuotes,
-        config,
-        chars[index + 1],
-        chars[index - 1]
-      );
-
-      if (char === config.delimiter && !acc.inQuotes) {
-        return {
-          field: '',
-          inQuotes: charResult.inQuotes,
-          row: [...acc.row, acc.field], // Use acc.field, not charResult.field for delimiter
-          skipNext: charResult.skipNext
-        };
+    } else {
+      // Not in quotes
+      
+      // Check for delimiter (supporting multi-character delimiters)
+      if (line.substr(position, config.delimiter.length) === config.delimiter) {
+        row.push(field);
+        field = '';
+        position += config.delimiter.length;
+      } else if (char === config.quote && 
+                 (position === 0 || line[position - 1] === config.delimiter[config.delimiter.length - 1] || field === '')) {
+        // Start of quoted field
+        inQuotes = true;
+        position++;
+      } else {
+        field += char;
+        position++;
       }
-
-      return {
-        field: charResult.field,
-        inQuotes: charResult.inQuotes,
-        row: acc.row,
-        skipNext: charResult.skipNext
-      };
-    },
-    {
-      field: state.currentField,
-      inQuotes: state.inQuotes,
-      row: state.currentRow,
-      skipNext: false
     }
-  );
+  }
 
   // Handle line continuation in quoted fields
   if (inQuotes && !isLastLine) {
@@ -163,84 +160,6 @@ function processLine(
     rows: shouldAddRow ? [...state.rows, completedRow] : state.rows,
     headers: state.headers,
     lineIndex: state.lineIndex + 1
-  };
-}
-
-function processCharacter(
-  char: string,
-  currentField: string,
-  inQuotes: boolean,
-  config: ParseConfig,
-  nextChar?: string,
-  prevChar?: string
-): CharResult {
-  if (inQuotes) {
-    return processQuotedCharacter(char, currentField, config, nextChar, prevChar);
-  } else {
-    return processUnquotedCharacter(char, currentField, config, prevChar);
-  }
-}
-
-function processQuotedCharacter(
-  char: string,
-  currentField: string,
-  config: ParseConfig,
-  nextChar?: string,
-  prevChar?: string
-): CharResult {
-  if (char === config.quote) {
-    // Handle escaped quotes
-    if (nextChar === config.quote && config.escape === config.quote) {
-      return {
-        field: currentField + config.quote,
-        inQuotes: true,
-        skipNext: true
-      };
-    }
-    
-    // End of quoted field
-    return {
-      field: currentField,
-      inQuotes: false,
-      skipNext: false
-    };
-  }
-
-  // Handle escape sequences
-  if (char === config.escape && config.escape !== config.quote && nextChar === config.quote) {
-    return {
-      field: currentField + config.quote,
-      inQuotes: true,
-      skipNext: true
-    };
-  }
-
-  return {
-    field: currentField + char,
-    inQuotes: true,
-    skipNext: false
-  };
-}
-
-function processUnquotedCharacter(
-  char: string,
-  currentField: string,
-  config: ParseConfig,
-  prevChar?: string
-): CharResult {
-  if (char === config.quote && 
-      (prevChar === undefined || prevChar === config.delimiter || currentField === '')) {
-    return {
-      field: currentField,
-      inQuotes: true,
-      skipNext: false
-    };
-  }
-
-  return {
-    field: currentField + char,
-    inQuotes: false,
-    skipNext: false
   };
 }
 

@@ -1,0 +1,6 @@
+Name,Description,Special
+John,"Multi-line
+description with
+newlines","quote""inside"
+Jane,"Comma, inside quotes",normal
+Bob,Simple description,
