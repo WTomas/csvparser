@@ -5,6 +5,7 @@ import {
   ParseError,
   ParserOptions,
   RowValidator,
+  RowValidationError,
 } from "./types";
 import { parseCSV } from "./csv-tokenizer";
 
@@ -135,17 +136,15 @@ export class Parser<T extends Record<string, any> = {}> {
     // Apply row validators only if there are no column errors
     if (errors.length === 0 && this.rowValidators.length > 0) {
       const rowValidationErrors = this.rowValidators
-        .map((validator) => {
+        .map((validator): ParseError | null => {
           const error = validator(record as T);
           if (error) {
             return {
               row: rowIndex + this.rowIndexOffset,
-              column: undefined,
-              property: "_row",
               value: JSON.stringify(record),
               message: error,
               type: "row-validation" as const,
-            } as ParseError;
+            } as RowValidationError;
           }
           return null;
         })

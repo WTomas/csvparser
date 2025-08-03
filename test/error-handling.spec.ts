@@ -25,7 +25,10 @@ describe("Error Handling", () => {
       expect(result.errors[0].type).toBe("transform");
       expect(result.errors[0].message).toBe("Cannot transform invalid data");
       expect(result.errors[0].row).toBe(3); // Jane's row
-      expect(result.errors[0].property).toBe("data");
+      if (result.errors[0].type !== "row-validation") {
+        expect(result.errors[0].property).toBe("data");
+        expect(result.errors[0].column).toBe("Data");
+      }
       expect(result.errors[0].value).toBe("invalid");
     });
 
@@ -331,8 +334,8 @@ describe("Error Handling", () => {
       expect(error.type).toBe("validation");
       if (error.type !== "row-validation") {
         expect(error.column).toBe("Age");
+        expect(error.property).toBe("age");
       }
-      expect(error.property).toBe("age");
       expect(error.value).toBe("-5");
       expect(error.message).toBe("Age cannot be negative");
     });

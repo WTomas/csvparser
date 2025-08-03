@@ -20,7 +20,6 @@ export interface CellError {
 
 export interface RowValidationError {
   row: number;
-  property: string;
   value: string;
   message: string;
   type: "row-validation";

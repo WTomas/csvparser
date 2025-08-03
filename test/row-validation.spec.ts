@@ -371,7 +371,7 @@ describe("Row Validation", () => {
       expect(error.type).toBe("row-validation");
       expect(error.row).toBe(2);
       expect(error["column"]).toBeUndefined();
-      expect(error.property).toBe("_row");
+      expect(error["property"]).toBeUndefined();
       expect(error.value).toBe(JSON.stringify({ value: 42 }));
       expect(error.message).toBe("Value 42 is invalid");
     });
